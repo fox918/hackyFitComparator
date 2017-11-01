@@ -2,8 +2,6 @@ package comparator
 
 import java.awt.event.{MouseEvent, MouseListener}
 import java.io.File
-import javax.swing._
-import javax.swing.event.{ChangeEvent, ChangeListener}
 
 import scalismo.faces.color.RGBA
 import scalismo.faces.gui.{GUIBlock, GUIFrame, ImagePanel}
@@ -11,7 +9,8 @@ import scalismo.faces.gui.GUIBlock._
 import scalismo.faces.io.PixelImageIO
 import scalismo.faces.image.{BufferedImageConverter, PixelImage}
 import scalismo.faces.image.BufferedImageConverter._
-import scalismo.faces.image.PixelImage
+import java.awt.datatransfer._
+import java.awt.Toolkit
 
 
 object FaceComparator extends App {
@@ -128,6 +127,19 @@ object FaceComparator extends App {
     //TODO extend iterator to make this work
   })
   val subjectLabel = GUIBlock.label(startDir.getName)
+
+  //comfort function to copy subject number to clipboard
+  subjectLabel.addMouseListener(new MouseListener {
+    override def mouseExited(e: MouseEvent): Unit = {}
+    override def mouseClicked(e: MouseEvent): Unit = {
+      val selection = new StringSelection(subjectLabel.getText())
+      val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
+      clipboard.setContents(selection, null)
+    }
+    override def mouseEntered(e: MouseEvent): Unit = {}
+    override def mousePressed(e: MouseEvent): Unit = {}
+    override def mouseReleased(e: MouseEvent): Unit = {}
+  })
 
   val imageShelf = GUIBlock.shelf(targetPL, bestFitPL, opaPL, combinedPL)
   val controlShelf = GUIBlock.shelf(prevButton, GUIBlock.horizontalSeparator, subjectLabel, GUIBlock.horizontalSeparator, nextButton)
