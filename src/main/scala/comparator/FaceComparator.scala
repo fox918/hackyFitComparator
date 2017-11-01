@@ -14,8 +14,10 @@ import java.awt.Toolkit
 
 
 object FaceComparator extends App {
+  //TODO hardcoded path for working dir
   val path = "/export/faces/projects/pami-ppm2017/experiments/fit-multipie-recognition/resultsNotForPublishing/bfm"
 
+  //gets a list with all subdirs where the images are
   def getSubDirs(root: String):List[File] = {
     val f = new File(root)
     if( f. exists() && f.isDirectory ){
@@ -29,8 +31,7 @@ object FaceComparator extends App {
   val subDirs = getSubDirs(path)
   println("Found "+subDirs.length+" Subdirectories")
 
-
-
+//returns a tuple with the target and the best fit image
   def getImages(dir: File): (PixelImage[RGBA],PixelImage[RGBA]) ={
     val targetName = "/target.png"
     val bestFitName = "/fitter-best.png"
@@ -44,25 +45,23 @@ object FaceComparator extends App {
     (targetPI, bestFitPI)
   }
 
-
+//an ImagePanel which swaps between two images on click
   case class ClickImagePanel[A](var a:PixelImage[A],var b:PixelImage[A])(implicit conv: BufferedImageConverter[A]) extends ImagePanel(a){
     var isA = true
-    //somehow the match thingie didnt work as expected...
     def swapImages(): Unit ={
-      if(isA){
-        super.updateImage(b)
-      }else{
-        super.updateImage(a)
+      isA match {
+        case true =>  super.updateImage(b)
+        case false => super.updateImage(a)
       }
       isA = !isA
     }
 
     def updateImages(nA:PixelImage[A], nB:PixelImage[A]): Unit ={
-      this.a = nA
-      this.b = nB
-      this.isA = true
+      this.a = nA; this.b = nB; this.isA = true
       super.updateImage(this.a)
     }
+
+    super.setToolTipText("click me to swap images...")
 
     super.addMouseListener(new MouseListener {
       override def mouseExited(e: MouseEvent): Unit = {}
@@ -75,6 +74,9 @@ object FaceComparator extends App {
     })
   }
 
+  /*
+  * Here comes the hacky part
+  * */
   //starting value
   //ugly hacking, could be made nicer...  but I like hackbraten
   val dirsIterator = Iterator.continually(subDirs).flatten
@@ -102,9 +104,6 @@ object FaceComparator extends App {
 
   val opaPI = targetPI.zip(bestFitPI).map {case (a,b) => blendWithOpacity(a,b) }
   val opaPL = ClickImagePanel(opaPI, targetPI)
-
-
-
 
   val combinedPI = targetPI.zip(bestFitPI).map {case (a,b) => blendWithAlpha(a,b) }
   val combinedPL = ClickImagePanel(combinedPI, targetPI)
