@@ -45,6 +45,35 @@ object FaceComparator extends App {
   }
 
 
+  case class ClickImagePanel[A](var a:PixelImage[A],var b:PixelImage[A])(implicit conv: BufferedImageConverter[A]) extends ImagePanel(a){
+    var isA = true
+    //somehow the match thingie didnt work as expected...
+    def swapImages(): Unit ={
+      if(isA){
+        super.updateImage(b)
+      }else{
+        super.updateImage(a)
+      }
+      isA = !isA
+    }
+
+    def updateImages(nA:PixelImage[A], nB:PixelImage[A]): Unit ={
+      this.a = nA
+      this.b = nB
+      this.isA = true
+      super.updateImage(this.a)
+    }
+
+    super.addMouseListener(new MouseListener {
+      override def mouseExited(e: MouseEvent): Unit = {}
+      override def mouseClicked(e: MouseEvent): Unit = {
+        swapImages()
+      }
+      override def mouseEntered(e: MouseEvent): Unit = {}
+      override def mousePressed(e: MouseEvent): Unit = {}
+      override def mouseReleased(e: MouseEvent): Unit = {}
+    })
+  }
 
   //starting value
   //ugly hacking, could be made nicer...  but I like hackbraten
@@ -72,36 +101,9 @@ object FaceComparator extends App {
   }
 
   val opaPI = targetPI.zip(bestFitPI).map {case (a,b) => blendWithOpacity(a,b) }
-  val opaPL = ImagePanel(opaPI)
+  val opaPL = ClickImagePanel(opaPI, targetPI)
 
 
-  case class ClickImagePanel[A](var a:PixelImage[A],var b:PixelImage[A])(implicit conv: BufferedImageConverter[A]) extends ImagePanel(a){
-    var isA = true
-    def swapImages(): Unit ={
-      if(isA){
-        super.updateImage(b)
-      }else{
-        super.updateImage(a)
-      }
-      isA = !isA
-    }
-
-    def updateImages(nA:PixelImage[A], nB:PixelImage[A]): Unit ={
-      this.a = nA
-      this.b = nB
-      super.updateImage(this.a)
-    }
-
-    super.addMouseListener(new MouseListener {
-      override def mouseExited(e: MouseEvent): Unit = {}
-      override def mouseClicked(e: MouseEvent): Unit = {
-        swapImages()
-      }
-      override def mouseEntered(e: MouseEvent): Unit = {}
-      override def mousePressed(e: MouseEvent): Unit = {}
-      override def mouseReleased(e: MouseEvent): Unit = {}
-    })
-  }
 
 
   val combinedPI = targetPI.zip(bestFitPI).map {case (a,b) => blendWithAlpha(a,b) }
@@ -113,7 +115,7 @@ object FaceComparator extends App {
     targetPL.updateImage(target)
     bestFitPL.updateImage(fit)
     val opa = target.zip(fit).map {case (a,b) => blendWithOpacity(a,b) }
-    opaPL.updateImage(opa)
+    opaPL.updateImages(opa, target)
     val comb = target.zip(fit).map {case (a,b) => blendWithAlpha(a,b) }
     combinedPL.updateImages(comb, target)
 
@@ -140,6 +142,7 @@ object FaceComparator extends App {
     override def mousePressed(e: MouseEvent): Unit = {}
     override def mouseReleased(e: MouseEvent): Unit = {}
   })
+  subjectLabel.setToolTipText("Click to copy to clipboard")
 
   val imageShelf = GUIBlock.shelf(targetPL, bestFitPL, opaPL, combinedPL)
   val controlShelf = GUIBlock.shelf(prevButton, GUIBlock.horizontalSeparator, subjectLabel, GUIBlock.horizontalSeparator, nextButton)
