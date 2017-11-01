@@ -144,7 +144,8 @@ object FaceComparator extends App {
   subjectLabel.setToolTipText("Click to copy to clipboard")
 
   val imageShelf = GUIBlock.shelf(targetPL, bestFitPL, opaPL, combinedPL)
-  val controlShelf = GUIBlock.shelf(prevButton, GUIBlock.horizontalSeparator, subjectLabel, GUIBlock.horizontalSeparator, nextButton)
+  //add previous button when implemented
+  val controlShelf = GUIBlock.shelf( GUIBlock.horizontalSeparator, subjectLabel, GUIBlock.horizontalSeparator, nextButton)
 
   val guiFrame: GUIFrame = GUIBlock.stack(imageShelf, controlShelf).displayIn("Face Comparator")
 
