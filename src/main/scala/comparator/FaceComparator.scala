@@ -1,6 +1,6 @@
 package comparator
 
-import java.awt.event.{MouseEvent, MouseListener}
+import java.awt.event.{KeyEvent, KeyListener, MouseEvent, MouseListener}
 import java.io.File
 
 import scalismo.faces.color.RGBA
@@ -10,7 +10,8 @@ import scalismo.faces.io.PixelImageIO
 import scalismo.faces.image.{BufferedImageConverter, PixelImage}
 import scalismo.faces.image.BufferedImageConverter._
 import java.awt.datatransfer._
-import java.awt.Toolkit
+import java.awt.{Color, Toolkit}
+import javax.swing.{JLabel, SwingConstants}
 
 
 object FaceComparator extends App {
@@ -129,25 +130,55 @@ object FaceComparator extends App {
   })
   val subjectLabel = GUIBlock.label(startDir.getName)
 
+  def copyToClip(str:String): Unit ={
+    val selection = new StringSelection(str)
+    val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
+    clipboard.setContents(selection, null)
+  }
+
   //comfort function to copy subject number to clipboard
   subjectLabel.addMouseListener(new MouseListener {
     override def mouseExited(e: MouseEvent): Unit = {}
     override def mouseClicked(e: MouseEvent): Unit = {
-      val selection = new StringSelection(subjectLabel.getText())
-      val clipboard = Toolkit.getDefaultToolkit.getSystemClipboard
-      clipboard.setContents(selection, null)
+      copyToClip(subjectLabel.getText())
     }
     override def mouseEntered(e: MouseEvent): Unit = {}
     override def mousePressed(e: MouseEvent): Unit = {}
     override def mouseReleased(e: MouseEvent): Unit = {}
   })
   subjectLabel.setToolTipText("Click to copy to clipboard")
+  subjectLabel.setForeground(new Color(255,0,0))
 
-  val imageShelf = GUIBlock.shelf(targetPL, bestFitPL, opaPL, combinedPL)
+  val descLabel = GUIBlock.label("Subject:")
+
+  val usageLabel = GUIBlock.label("j: next subject, f: toggle mask, d:copy to clipboard")
+  usageLabel.setForeground(new Color(100,100,100))
+
+  val rawShelf = GUIBlock.shelf(targetPL, bestFitPL)
+  val overlayShelf = GUIBlock.shelf(opaPL, combinedPL)
+
+  val imageStack = GUIBlock.stack(rawShelf, overlayShelf)
+
+
   //add previous button when implemented
-  val controlShelf = GUIBlock.shelf( GUIBlock.horizontalSeparator, subjectLabel, GUIBlock.horizontalSeparator, nextButton)
+  val controlShelf = GUIBlock.shelf( usageLabel, GUIBlock.horizontalSeparator,descLabel, subjectLabel, GUIBlock.horizontalSeparator, nextButton)
 
-  val guiFrame: GUIFrame = GUIBlock.stack(imageShelf, controlShelf).displayIn("Face Comparator")
+  val guiFrame: GUIFrame = GUIBlock.stack(imageStack, controlShelf).displayIn("Face Comparator")
+
+  guiFrame.requestFocusInWindow()
+  guiFrame.addKeyListener(new KeyListener {
+    override def keyPressed(e: KeyEvent): Unit = {}
+    override def keyTyped(e: KeyEvent): Unit = {
+      //println(" typed key '"+e.getKeyChar+ "'")
+      e.getKeyChar match {
+        case 'k' | ' ' => updateGUI(dirsIterator.next())
+        case 'f' => opaPL.swapImages(); combinedPL.swapImages()
+        case 'd' => copyToClip(subjectLabel.getText())
+      }
+    }
+    override def keyReleased(e: KeyEvent): Unit = {}
+  })
+
 
 
 
